@@ -1,0 +1,290 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>uWebSocket Test</title>
+  <meta name="description" content="uWebSocket Test">
+  <meta name="author" content="SitePoint">
+
+  <!-- <link rel="stylesheet" href="css/styles.css?v=1.0"> -->
+
+</head>
+
+<body onload="createWebSocket()">
+
+
+    <p>socket test</p>
+
+    <div>
+        <button type="button" onclick="sendMessage()">Send Message</button>
+    </div>
+
+    <div>
+        <button type="button" onclick="closeSocket()">Close Socket</button>
+    </div>
+
+    <div>
+        <button type="button" onclick="joinRoom()">Join Room</button>
+    </div>
+
+    <div>
+        <button type="button" onclick="leaveRoom()">Leave Room</button>
+    </div>    
+
+    <div>
+        <button type="button" onclick="testPublish()">Publish Room</button>
+    </div>    
+
+    <div>
+        <button type="button" onclick="testServerSend()">Test Server Send</button>
+    </div>     
+
+    <div>
+        <button type="button" onclick="stopHeartBeat()">Stop Heartbeat</button>
+    </div>            
+
+
+    <div style="border: 1px solid black; padding: 10px; margin: 20px 0px;">
+
+        <div>
+            <button type="button" onclick="savedMatchScoresBasicDevice()">Save Scores Basic</button>
+        </div>         
+
+    </div>
+
+  <script>
+
+      let socket = null;
+      let myHeartBeat = null;
+
+      let initialReconnectDelay = 1000; // 1 sec
+      let currentReconnectDelay = initialReconnectDelay;
+      let maxReconnectDelay = 16000; // 16 sec
+
+      function createWebSocket()
+      {
+        // DONE - Make sure to clearInterval when socket connect - the interval is used on the reconnect attempts
+        // DONE - Implement the exponential backoff stragegy - https://dev.to/jeroendk/how-to-implement-a-random-exponential-backoff-algorithm-in-javascript-18n6
+        // TODO: - think about NOT reseting the connection interval once it goes over the maxReconnectDelay - ex. keep it at 16000 + until it connects then reset it back
+        // https://www.generacodice.com/en/articolo/940828/Reconnection+of+Client+when+server+reboots+in+WebSocket
+        // TODO: onError Add reconnect logic
+
+        // client side websocket connection library with reconnection options - reference for ideas such as reconnect attempts etc
+        //  - https://github.com/pladaria/reconnecting-websocket/issues
+
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications
+
+        // https://stackoverflow.com/questions/31002592/javascript-doesnt-catch-error-in-websocket-instantiation/31003057
+
+        /*
+            CONNECTING 0 The connection is not yet open.
+            OPEN       1 The connection is open and ready to communicate.
+            CLOSING    2 The connection is in the process of closing.
+            CLOSED     3 The connection is closed or couldn't be opened.        
+        */
+
+        /* Connect to the server */
+        socket = new WebSocket('ws://localhost:9001?adminid=26&eventid=0');
+        // socket.binaryType = 'arraybuffer';          
+
+        socket.onopen = (event) => 
+        {
+            // now we are connected
+            /* Join the "room" of canvas 1 */
+            // socket.send({message: 'admin26 connected'});
+            // socket.send(JSON.stringify({message: 'buy', share: 123}));
+            console.log('client socket opened');
+
+            // Reset the re-connection interval
+            currentReconnectDelay = initialReconnectDelay;
+
+            // Start the Heartbeat Interval (Ping)
+            myHeartBeat = setInterval(heartBeat, 8000);
+        };   
+
+        /* For every message we receive */
+        socket.onmessage = (messageParm) => 
+        {      
+            let message = JSON.parse(messageParm.data);
+            console.log('client recieved message', message);
+
+            switch (message.action) 
+            {
+                case 'updated-score':
+                {
+                    console.log('client side message update score : ', message);
+                    break;
+                }
+                case 'test-send':
+                {
+                    console.log('client side message test send : ', message);
+                    break;
+                }                
+            }            
+        };    
+
+        socket.onerror = (event) => 
+        {
+           // https://stackoverflow.com/questions/31002592/javascript-doesnt-catch-error-in-websocket-instantiation/31003057 
+            console.error("WebSocket error observed:", event);
+
+            if (!navigator.onLine) {
+                alert("You are offline. Please connect to the Internet and try again.");
+            }            
+
+            socket = null;
+            stopHeartBeat(); 
+
+            switch (event.code)
+            {
+                // Try and reconnect
+                case 'ECONNREFUSED':
+                {
+                    console.log('Connection Refused - reconnect !!');
+                    startReconnect(event);
+                    break;
+                } 
+                default:
+                {
+                    // Otherwise run error
+                    // that.onerror(event);
+                    console.log('error triggered ', event.code);
+                    break;
+                }
+
+            }            
+        };     
+
+        // Websocket close event is triggered
+        socket.onclose = (event) => 
+        {
+            // console.log("WebSocket is closed now.", event.code);
+            // console.log("onClose socket readyState : ", socket.readyState);
+            // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes
+
+            socket = null;
+            stopHeartBeat(); 
+
+            switch (event.code)
+            {
+                case 1000:	// CLOSE_NORMAL
+                {
+                    console.log("WebSocket: closed");
+                    break;
+                } 
+                default:  // 1006 Abnormal closure
+                {
+                    startReconnect();
+                    break;
+                }
+            }
+        };             
+
+      }
+
+      function startReconnect()
+      {
+        // Add anything between 0 and 3000 ms to the delay.
+        // console.log('----- Reconnection Delay : ', currentReconnectDelay);
+        let backoffInterval = currentReconnectDelay + Math.floor(Math.random() * 3000);
+        // console.log('backoff interval : ', backoffInterval);
+        setTimeout(() => 
+        {
+            console.log("WebSocketClient: reconnecting...");
+            reconnectToWebsocket(event);
+        }, backoffInterval);
+      }
+
+
+
+      // Functions to be called within the app
+      function sendMessage()
+      {
+        socket.send(JSON.stringify({'action':'message', data: {adminID: 26}}));
+      }
+
+      function joinRoom()
+      {
+        socket.send(JSON.stringify({'action': 'join', 'room':'26-0', 'data': 'test message'}));
+      }      
+
+      function leaveRoom()
+      {
+        socket.send(JSON.stringify({'action': 'leave', 'room':'26-0', 'data': 'test message'}));
+      }   
+
+      function testPublish()
+      {
+        socket.send(JSON.stringify({'action':'publish', 'room':'26-0', data: {adminID: 26}}));
+      }      
+
+      function testServerSend()
+      {
+        socket.send(JSON.stringify({'action':'test-send', data: {adminID: 26}}));
+      }      
+
+
+
+        /*
+            ----------------------------------------------------
+            Score Tracker Functions
+            ----------------------------------------------------
+        */
+        function savedMatchScoresBasicDevice()
+        {
+            socket.send(JSON.stringify({'action':'saved-match-scores-basic-device', data: {matchID: 1, gameID: 1, eventID: 1850, homeScore: 26, awayScore: 18, teamInfo: []}}));
+        }        
+
+
+
+      function closeSocket()
+      {
+        socket.close();
+        console.log('Client Closed the Socket');
+      }
+
+
+      function heartBeat()
+      {
+        console.log('heartBeat is firing');
+        if (socket.readyState == socket.OPEN) 
+        {  
+            socket.send(JSON.stringify({'action':'ping', 'message': ''}));
+            // socket.ping({});
+        }           
+
+        // https://www.jstips.co/en/javascript/working-with-websocket-timeout/
+
+      }
+      
+      function stopHeartBeat() 
+      {
+        // console.log('STOP HEARTBEAT');
+        clearInterval(myHeartBeat);
+        myHeartBeat = null;
+      }      
+
+      function reconnectToWebsocket(event)
+      {
+        // Reconnect Delay is less than the max of increase the delay
+        // console.log(`CurrentReconnectDelay : ${ currentReconnectDelay } / maxReconnectDealy ${ maxReconnectDelay }`);
+        if(currentReconnectDelay < maxReconnectDelay) 
+        {
+            currentReconnectDelay *= 2; // 1.5 seemed reasonable as well
+        }
+        else if(currentReconnectDelay >= maxReconnectDelay)
+        {
+            // Reconnect Delay is now greater than or equeal to the default of 16 secs
+            // start the delay over again
+            currentReconnectDelay = initialReconnectDelay;
+        }
+
+        // Attempt to create WebSocket and connect to server
+        createWebSocket();
+      }      
+
+  </script>
+</body>
+</html>

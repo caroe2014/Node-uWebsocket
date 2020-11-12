@@ -1,0 +1,155 @@
+
+WS - WebSockets
+
+
+
+Auto-reconnect
+
+    - backoff
+
+    https://stackoverflow.com/questions/22431751/websocket-how-to-automatically-reconnect-after-it-dies
+    has backoff info
+
+    https://stackoverflow.com/questions/3780511/reconnection-of-client-when-server-reboots-in-websocket
+
+
+    https://github.com/nathanboktae/robust-websocket
+    - has exponential backoff
+
+
+    reconnect / with exponential backoff
+    https://github.com/socketio/socket.io-client/blob/1.7.2/lib/manager.js#L513
+
+Disconnect Detection
+
+
+Rooms
+
+
+Redis
+    No need for sticky sessions with Redis
+
+Load Balancer
+
+    HAProxy leastconn https://discourse.haproxy.org/t/leastconn-for-websockets/5860
+        - High Availability Proxy
+    Ngnix
+        - https://www.nginx.com/partners/microsoft-azure/
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+https://www.npmjs.com/package/primus#what-is-the-best-way-to-scale-primus
+
+https://www.npmjs.com/package/back
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+uWebSockets.js (uws)
+https://github.com/uNetworking/uWebSockets.js
+
+
+* https://github.com/uNetworking/uWebSockets/blob/master/misc/READMORE.md this is the C++ version
+Boilerplate logic like heartbeat timeouts, backpressure handling, ping/pong and other annoyances are handled efficiently and easily. You write business logic, the library handles the protocol(s).
+
+
+npm install uNetworking/uWebSockets.js#v18.8.0
+
+Rooms Example
+    - https://github.com/uNetworking/pubsub-example
+
+Documentation
+    - https://unetworking.github.io/uWebSockets.js/generated/
+
+
+https://unetworking.github.io/uWebSockets.js/generated/interfaces/websocketbehavior.html
+
+
+Standard WebSockets don’t need any client libraries and can perform up to 20x that of Socket.IO, with a far lower latency. Standard WebSockets are implemented as part of the web browser, deep down in the C++ guts. Google recently made a major performance leap for WebSockets in Chrome 78, something not possible with Socket.IO. Leave it to Google.
+
+https://github.com/uNetworking/uWebSockets.js/releases
+
+
+
+https://medium.com/@alexhultman/moving-from-socket-io-to-%C2%B5websockets-js-a85753b93a5a
+
+https://medium.com/@alexhultman/how-%C2%B5websockets-achieves-efficient-pub-sub-18ceda373997 // Using the Pub / Sub in the example project
+
+https://medium.com/@alexhultman/beware-of-tin-foil-hattery-f738b620468c
+
+https://medium.com/@alexhultman/millions-of-active-websockets-with-node-js-7dc575746a01
+
+
+
+https://edisonchee.com/writing/intro-to-%C2%B5websockets.js/
+
+
+
+
+PING / PONG / heartbeat / keepalive
+https://github.com/uNetworking/uWebSockets/issues/801
+https://stackoverflow.com/questions/50876766/how-to-implement-ping-pong-request-for-websocket-connection-alive-in-javascript/50883592
+
+It will disconnect as per idleTimeout if you don't send or receive anything, so you either have to make the client send an empty message or the like, or make the server send something.
+
+This issue discussed the autoPing feature to have the server automatically ping clients in time for idleTimeout - if you want me to work on that you can have the people at aax.com pay for the hours, you can reach me on email.
+
+
+
+
+exaple chat
+https://github.com/uNetworking/uWebSockets.js/pull/90/commits/5edbe3e571fa8956c160289570ee9a21efcdd54d
+
+Redis example
+https://gist.github.com/reu/5342276
+
+Redis VUE.js - redis website
+https://redislabs.com/blog/how-to-create-notification-services-with-redis-websockets-and-vue-js/ 
+
+You can use Redis pub/sub between servers and then uWS pub/sub as the browser-facing pub/sub. Don't overuse Redis though, I've seen companies with this set-up where they had 1-to-1 subscription (one Redis subscription for every browser client). That had horrible performance. That's my two cents.
+
+Head of Node.js team
+https://tsh.io/blog/how-to-scale-websocket/
+
+
+https://stackoverflow.com/questions/43918719/how-to-get-all-redis-pub-sub-channels-using-node-js
+
+
+Socket.io comparision
+https://github.com/uNetworking/uWebSockets.js/issues/268
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+haproxy 
+    download - https://www.haproxy.org/#down
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Azure Load Balancer
+
+https://docs.microsoft.com/en-us/azure/architecture/guide/technology-choices/load-balancing-overview
+
+At this time, Azure Front Door does not support Web Sockets.
+
+
+https://social.msdn.microsoft.com/Forums/azure/en-US/af01fd24-991b-4bde-bcdf-c4f1dff06bc3/websocket-configuration-on-azure-lb?forum=WAVirtualMachinesVirtualNetwork
+Application Gateway supports: HTTP, HTTPS, and WebSockets
+
+https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-overview
+
+
+https://serverfault.com/questions/884554/azure-webservices-auto-scale-and-load-balancers-does-auto-scale-handle-load
+
+
+
+RXJS 
+https://blog.angulartraining.com/how-to-use-websockets-with-rxjs-and-angular-b98e7fd8be82
+https://rxjs-dev.firebaseapp.com/api/webSocket/webSocket
+
+
+https://chrome.google.com/webstore/detail/smart-websocket-client/omalebghpgejjiaoknljcfmglgbpocdp?hl=en-US
