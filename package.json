@@ -1,7 +1,7 @@
 {
   "name": "acl-socket-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Node App with uWebSocket ",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
