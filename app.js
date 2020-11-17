@@ -1,6 +1,6 @@
 var express = require('express');
 var app = express();
-const port = 80;
+const port = process.env.PORT || 80;
 var http = require('http');
 var server = http.createServer(app);
 
@@ -13,7 +13,7 @@ app.get('/', function (req, res)
   res.send('Hello World Response for / from NodeJS and Express on Port 80')
 });
 
-server.listen(80,'10.0.1.4', () => 
+server.listen(port,'10.0.1.4', () => 
 {
     console.log(`Example app listening on Port ${port}`)
 });
